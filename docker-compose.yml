@@ -1,0 +1,39 @@
+version: '3.7'
+# Image URLs
+## https://hub.docker.com/_/redis?tab=tags
+## https://hub.docker.com/r/mdillon/postgis/tags
+## https://hub.docker.com/r/dhillonrs/atlas_webapp/tags
+#
+services:
+  redis:
+    image: redis:alpine
+    container_name: redis
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+  postgres:
+    image: mdillon/postgis
+    container_name: postgis
+    environment:
+      POSTGRES_USER: patrick
+      POSTGRES_DB: atlas_of_thrones
+    volumes:
+      - type: bind
+        source: ./atlas_of_thrones.sql
+        target: /docker-entrypoint-initdb.d/atlas_of_thrones.sql
+      - postgresql_data:/var/lib/postgresql/data
+    restart: unless-stopped
+  webapp:
+#    build: .
+    image: dhillonrs/atlas_webapp:1.0
+    container_name: atlas_webapp
+    ports:
+      - "5000:5000"
+      - "8080:8080"
+    depends_on:
+      - redis
+      - postgres
+    restart: unless-stopped
+volumes:
+  postgresql_data:
+  redis_data:
